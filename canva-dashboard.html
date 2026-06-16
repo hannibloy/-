@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>מרכז הפרויקטים של חני בלוי · קנבה</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', 'Rubik', 'Heebo', Arial, sans-serif;
+    background: linear-gradient(135deg, #f5f7fb 0%, #eef2ff 100%);
+    color: #1f2937;
+    direction: rtl;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
+    color: white;
+    padding: 40px 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25);
+    margin-bottom: 30px;
+    text-align: center;
+  }
+  header h1 { font-size: 2.3rem; margin-bottom: 10px; font-weight: 800; letter-spacing: -0.5px; }
+  header p { opacity: 0.95; font-size: 1.05rem; }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+    margin-top: 25px;
+  }
+  .stat-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .stat-num { font-size: 1.8rem; font-weight: 800; }
+  .stat-label { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
+
+  .controls {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 25px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 250px;
+    position: relative;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 12px 45px 12px 15px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border 0.2s;
+  }
+  .search-box input:focus { outline: none; border-color: #7c3aed; }
+  .search-box::before {
+    content: "🔍";
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    opacity: 0.5;
+  }
+  .view-toggle {
+    display: flex;
+    gap: 5px;
+    background: #f3f4f6;
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .view-toggle button {
+    border: none;
+    background: transparent;
+    padding: 8px 14px;
+    cursor: pointer;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+  .view-toggle button.active {
+    background: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    font-weight: 600;
+  }
+
+  .categories-nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+  }
+  .cat-chip {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cat-chip:hover { border-color: #a78bfa; transform: translateY(-1px); }
+  .cat-chip.active {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    border-color: transparent;
+  }
+  .cat-chip .count {
+    background: rgba(0, 0, 0, 0.08);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .cat-chip.active .count { background: rgba(255, 255, 255, 0.25); }
+
+  .category-section {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  }
+  .category-section.hidden { display: none; }
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f3f4f6;
+  }
+  .category-header .icon {
+    font-size: 1.8rem;
+    background: linear-gradient(135deg, #ede9fe, #fce7f3);
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .category-header h2 { font-size: 1.4rem; font-weight: 700; color: #1e293b; }
+  .category-header .desc { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+  }
+  .projects-list .projects-grid {
+    grid-template-columns: 1fr;
+  }
+  .project-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .project-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+    border-color: #c4b5fd;
+  }
+  .thumb-wrapper {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, var(--accent, #7c3aed), var(--accent2, #db2777));
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .thumb-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .thumb-wrapper .fallback {
+    color: white;
+    font-size: 2rem;
+    font-weight: 800;
+    text-align: center;
+    padding: 20px;
+    display: none;
+  }
+  .thumb-wrapper.no-img img { display: none; }
+  .thumb-wrapper.no-img .fallback { display: block; }
+  .project-body {
+    padding: 14px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .project-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 8px;
+    line-height: 1.4;
+    flex: 1;
+  }
+  .project-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .project-meta span {
+    background: rgba(124, 58, 237, 0.08);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .project-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .btn {
+    flex: 1;
+    text-align: center;
+    padding: 7px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .btn-edit {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+  }
+  .btn-edit:hover { opacity: 0.9; transform: scale(1.02); }
+  .btn-view {
+    background: white;
+    color: #4f46e5;
+    border: 1.5px solid #e5e7eb;
+  }
+  .btn-view:hover { border-color: #7c3aed; background: #faf5ff; }
+
+  footer {
+    text-align: center;
+    color: #64748b;
+    margin-top: 40px;
+    padding: 20px;
+    font-size: 0.9rem;
+  }
+  @media (max-width: 640px) {
+    body { padding: 10px; }
+    header { padding: 25px 15px; }
+    header h1 { font-size: 1.6rem; }
+    .projects-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎨 מרכז הפרויקטים של חני בלוי</h1>
+  <p>ריכוז מסודר וחי של כל העיצובים, המצגות והפרסומים שלך בקנבה</p>
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num" id="totalCount">0</div><div class="stat-label">סה"כ פרויקטים</div></div>
+    <div class="stat-card"><div class="stat-num">15</div><div class="stat-label">קטגוריות</div></div>
+    <div class="stat-card"><div class="stat-num">1,800+</div><div class="stat-label">עמודי תוכן</div></div>
+    <div class="stat-card"><div class="stat-num">6</div><div class="stat-label">שנות עבודה</div></div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="חיפוש פרויקט לפי שם…">
+  </div>
+  <div class="view-toggle">
+    <button class="active" data-view="grid">⊞ רשת</button>
+    <button data-view="list">☰ רשימה</button>
+  </div>
+</div>
+
+<div class="categories-nav" id="catNav"></div>
+
+<div id="categoriesContainer"></div>
+
+<footer>
+  עודכן אחרון: אפריל 2026 · נוצר על ידי Cowork · מחובר לחשבון הקנבה שלך<br>
+  💡 טיפ: לחיצה על "עריכה" פותחת את העיצוב לעריכה בקנבה. "צפייה" פותחת לתצוגה בלבד.
+</footer>
+
+<script>
+const data = [
+  {
+    id: "team-resilience", icon: "🦁", name: "פעילויות חוסן לצוות",
+    desc: "תיקייה חדשה בקנבה — מצגות חוסן ופעילויות מותאמות לצוות",
+    color: "#b45309", color2: "#dc2626",
+    projects: [
+      { id: "DAHDrqH6Wjo", title: "אריה ולביאה", pages: 4, thumb: "https://design.canva.ai/lBR_x76omHXc4vB" }
+    ]
+  },
+  {
+    id: "resilience", icon: "💪", name: "חוסן רגשי וכוחות פנימיים",
+    desc: "סדרות העיצובים המרכזיות שלך בנושא חוסן, עוגנים, בטחון ופעימות של כוח פנימי",
+    color: "#7c3aed", color2: "#db2777",
+    projects: [
+      { id: "DAHGp0vP8i0", title: "העוגן שבפנים - גש\"ר מאח\"ד", pages: 1, thumb: "https://design.canva.ai/OMADERs1WJ1hD_N" },
+      { id: "DAHFC1pNk5U", title: "יש בי כוח מסע וחוסן פנימי גש\"ר מאח\"ד", pages: 1, thumb: "https://design.canva.ai/UUAxIChwbs2RaU6" },
+      { id: "DAHGp1Sgd0Q", title: "גש\"ר מאח\"ד", pages: 1, thumb: "https://design.canva.ai/llU3c2gYoinArlP" },
+      { id: "DAHEto84mvs", title: "גש\"ר מאח\"ד (מורחב)", pages: 17, thumb: "https://design.canva.ai/no_5FhMwsxbr81w" },
+      { id: "DAHEt-CJxVY", title: "גשר מאחד", pages: 6, thumb: "https://design.canva.ai/3XJcZzC0dwIdK-9" },
+      { id: "DAHGp5MltqQ", title: "אריה שואג", pages: 3, thumb: "https://design.canva.ai/u0TIyRWg1Va8hPy" },
+      { id: "DAHCp3LdIlk", title: "עם כלביא (30×55 ס\"מ)", pages: 3, thumb: "https://design.canva.ai/CUXaqLkFE7bfRhR" },
+      { id: "DAGql-p1tE4", title: "עם כלביא", pages: 12, thumb: "https://design.canva.ai/kqEjwOJCJf1CGCZ" },
+      { id: "DAHEO0zOP9Q", title: "המסע שלי לבטחון", pages: 34, thumb: "https://design.canva.ai/Sa718YQkFlR3otF" },
+      { id: "DAHESFCJCOo", title: "המסע שלי לבטחון (מקור)", pages: 37, thumb: "https://design.canva.ai/a_H6nGfyzK4F7uo" },
+      { id: "DAG4az8u2uM", title: "המסע שלי לבטחון - גרסה מקוצרת", pages: 11, thumb: "https://design.canva.ai/DjRJ5dtX0oL6BsI" },
+      { id: "DAHBVLjcWE4", title: "פנקס הבטחון שלי", pages: 1, thumb: "https://design.canva.ai/25o_PHhlOA7F-l5" },
+      { id: "DAHHGHWBfh4", title: "פנקס בטחון הסבר", pages: 8, thumb: "https://design.canva.ai/j0rxGVszGYyRrQX" },
+      { id: "DAHDGPAnsto", title: "לב הארי - פעימות של חוסן", pages: 15, thumb: "https://design.canva.ai/AAIazTnXONRzLl7" },
+      { id: "DAHDuSzilSg", title: "עוגנים בשליטה - סדנת טכנולוגיה ו-AI", pages: 19, thumb: "https://design.canva.ai/VoNsdvUUCaw7p3C" },
+      { id: "DAE2NDgms3s", title: "מפגש חוסן - לוקחים אויר (א)", pages: 17, thumb: "https://design.canva.ai/KBLbRHgjljHGD5O" },
+      { id: "DAE11Ln5r04", title: "מפגש חוסן - לוקחים אויר (ב)", pages: 17, thumb: "https://design.canva.ai/kQTSLo657rGhs9w" },
+      { id: "DAEe6ldf6sI", title: "מפגש חוסן בימים של משבר", pages: 31, thumb: "https://design.canva.ai/VR4hR0E6LYHATEq" },
+      { id: "DAF094Uzgac", title: "מפגש חוסן - הכוח שבי", pages: 28, thumb: "https://design.canva.ai/FXahc0scop19--y" },
+      { id: "DAHDT2EcsiE", title: "מסרים בוני חוסן", pages: 6, thumb: "https://design.canva.ai/PaUDgtF6OdwL3UG" },
+      { id: "DAEVZNb7Lp0", title: "מפגש צוות מתחסנים - בית", pages: 8, thumb: "https://design.canva.ai/VX3-cnHv93IBn9w" },
+      { id: "DAG92y6zCbM", title: "מחברת הכוחות שבי", pages: 39, thumb: "https://design.canva.ai/bVHI8ZasYouQDob" },
+      { id: "DAG9nkRkf3M", title: "פנקס התגליות שלי - הכוחות שבי", pages: 4, thumb: "https://design.canva.ai/iOxS_BGFEIPtNvL" },
+      { id: "DAG-9KUTkW4", title: "הכוחות שבדרך - פנקס למחנכת", pages: 53, thumb: "https://design.canva.ai/HU7dH-Jj8eSGNJ8" },
+      { id: "DAHESV6GVrc", title: "My Safety Anchor (אנגלית)", pages: 10, thumb: "https://design.canva.ai/4p-wey4RK-sfzTM" },
+      { id: "DAHESTEvTbM", title: "Personal Resilience Toolkit (אנגלית)", pages: 11, thumb: "https://design.canva.ai/b5Pv9Y8f3pDkle1" },
+      { id: "DAFlH6Zcwfw", title: "מברק של נחת", pages: 9, thumb: "https://design.canva.ai/_0VvsvM5hgD4tUC" },
+      { id: "DAHA0RWRoM8", title: "פנקס מברק של נחת", pages: 6, thumb: "https://design.canva.ai/sK_uFGX6wOurDOu" },
+      { id: "DAHEB85yvU4", title: "שובר עידוד - חני בלוי", pages: 4, thumb: "https://design.canva.ai/CXM4lObAKMBmLIi" },
+      { id: "DAFBiiBeRo8", title: "כרטיסי העצמה (7×5 ס\"מ)", pages: 27, thumb: "https://design.canva.ai/EA5-uyXCPez-Ssd" }
+    ]
+  },
+  {
+    id: "emergency", icon: "🚨", name: "צל\"ח, חירום ומשברים",
+    desc: "צוותי חירום, הטמעה, הרצאות פתיחה, תרגילים וסימולציות",
+    color: "#dc2626", color2: "#f59e0b",
+    projects: [
+      { id: "DAHDrDgv3Y0", title: "צל\"ח ארצי", pages: 11, thumb: "https://design.canva.ai/i1f78PO0aGpsKsh" },
+      { id: "DAG_cjQHUTY", title: "צל\"ח (לוגו)", pages: 3, thumb: "https://design.canva.ai/27CEsEN3D2OiCDF" },
+      { id: "DAE1yQJIxN0", title: "הטמעת צל\"ח", pages: 72, thumb: "https://design.canva.ai/7oRrJAta2NiMSLW" },
+      { id: "DAF5OuNNXlg", title: "הטמעת צל\"ח צוות ניהול", pages: 54, thumb: "https://design.canva.ai/yOkD4LF8X2GSARP" },
+      { id: "DAGzOfe2-aU", title: "כנס צוותים לשעת חירום (צל\"ח)", pages: 2, thumb: "https://design.canva.ai/5afik77k-g4-sCH" },
+      { id: "DAHDc4wbpsg", title: "הרצאת פתיחה צל\"ח גנים", pages: 38, thumb: "https://design.canva.ai/Q5FkWURFLbnBjEB" },
+      { id: "DAHDcsoK1dM", title: "כלי חוסן צל\"ח גנים", pages: 12, thumb: "https://design.canva.ai/WSVPVqhsmjHNkwf" },
+      { id: "DAG4ervP-dI", title: "צל\"ח - הרצאת פתיחה", pages: 8, thumb: "https://design.canva.ai/N80_0ng5rdGiXWc" },
+      { id: "DAG5Dgi_0D8", title: "צל\"ח - הרצאת פתיחה (עותק)", pages: 6, thumb: "https://design.canva.ai/sSLdilAAXoz9-dJ" },
+      { id: "DAHCCs3pTIE", title: "מצגת לתרגיל ארצי תשפ\"ו", pages: 24, thumb: "https://design.canva.ai/oQWAWhe6FgAmarP" },
+      { id: "DAG_cX4TGuo", title: "שבוע חירום - משרד החינוך תשפ\"ו", pages: 8, thumb: "https://design.canva.ai/yo7UEh9DNx5O1Ya" },
+      { id: "DAHAcFztnTU", title: "שבוע חירום - משרד החינוך (עותק)", pages: 1, thumb: "https://design.canva.ai/HeGoHXce3qMQZzB" },
+      { id: "DAG2dORbXpc", title: "התנסות באירוע חירום - סימולציה", pages: 15, thumb: "https://design.canva.ai/_DIqYMoKBWPgbjE" },
+      { id: "DAFwqUKAPxU", title: "מאגר מסמכים לשעת חרום", pages: 7, thumb: "https://design.canva.ai/9aFVhazaOBVbsSe" },
+      { id: "DAHDGlhwkgY", title: "חירום - סופי", pages: 35, thumb: "https://design.canva.ai/nmgtorFdxn0QPE_" },
+      { id: "DAHDE0jRj5Y", title: "הורות מיטבית במציאות קיצונית", pages: 51, thumb: "https://design.canva.ai/QYU--7iLvy_7TEr" },
+      { id: "DAHDgGqjJq4", title: "Preschool Emergency Readiness", pages: 11, thumb: "https://design.canva.ai/ytLCXXDotAr9ETn" },
+      { id: "DAHDfFV-fI0", title: "Early Childhood Crisis Resilience", pages: 21, thumb: "https://design.canva.ai/43Mr1CUjDvsT9Lk" },
+      { id: "DAHD_sz_aHY", title: "Mifgash Zevet 22.6", pages: 4, thumb: "https://design.canva.ai/EHDVPAH3wvhZZU0" },
+      { id: "DAHEMay-UXk", title: "מתווה חזרה ללמידה דיפרנציאלית", pages: 13, thumb: "https://design.canva.ai/JNuqXmxJdzGTatT" }
+    ]
+  },
+  {
+    id: "suicide", icon: "🫶", name: "מניעת אובדנות",
+    desc: "סדרות \"ובחרת בחיים\", QPR-T, מודעות למניעת אובדנות וטפסים ליועץ",
+    color: "#0891b2", color2: "#4f46e5",
+    projects: [
+      { id: "DAE_uHbSOpU", title: "\"ובחרת בחיים\" - מליאת צוות מצגת מלאה", pages: 68, thumb: "https://design.canva.ai/Xi8r1CGo2DJMQmV" },
+      { id: "DAEVM6s3Hxk", title: "ובחרת בחיים - לישיבת צוות", pages: 19, thumb: "https://design.canva.ai/8JdZ688je2ZPb9L" },
+      { id: "DAEVM3Q-Q3U", title: "מליאת יועצים \"ובחרת בחיים\" - קורונה", pages: 29, thumb: "https://design.canva.ai/cEscNCf46QkWWQr" },
+      { id: "DAEv_1ZT8fo", title: "\"ובחרת בחיים\" טפסים ליועץ", pages: 1, thumb: "https://design.canva.ai/tsYMiWgzvR-0ip3" },
+      { id: "DAG4zP47_Bg", title: "שבוע הגברת המודעות - QPR-T", pages: 41, thumb: "https://design.canva.ai/JabR6QkTcSJuAgy" },
+      { id: "DAF4LZK0ymM", title: "מניעת אובדנות (חרבות ברזל) מלא", pages: 69, thumb: "https://design.canva.ai/1WIan-DrApcsaRK" },
+      { id: "DAF4QSLCq74", title: "מקוצר - מניעת אובדנות חרבות ברזל", pages: 48, thumb: "https://design.canva.ai/Cpd6CxdzaMaHvnX" },
+      { id: "DAF7jx1ibl0", title: "מקוצר - מניעת אובדנות (עותק)", pages: 38, thumb: "https://design.canva.ai/hD8NXuWskN0elwT" },
+      { id: "DAGd8X63vyc", title: "מניעת אובדנות חרבות ברזל - צוות", pages: 54, thumb: "https://design.canva.ai/bWazFT0R9T1skxl" },
+      { id: "DAG3e-mIKsY", title: "מניעת אובדנות תשפ\"ו - צוות", pages: 45, thumb: "https://design.canva.ai/MgjeIk1RDpUUyHm" },
+      { id: "DAHAzx5PVi4", title: "מניעת אובדנות", pages: 29, thumb: "https://design.canva.ai/7lNujiSYBr8AH7S" },
+      { id: "DAGeIHE64pA", title: "הכוחות שבדרך - מניעת אובדנות", pages: 1, thumb: "https://design.canva.ai/kkadl9yxGW6Q9gT" },
+      { id: "DAG5NiI8Cbo", title: "בשיחה עם תלמיד/ה בסיכון", pages: 1, thumb: "https://design.canva.ai/IhGX2Q1m8y8kf5S" },
+      { id: "DAF9J0Ymg-o", title: "תדריך לצפייה מבוקרת", pages: 5, thumb: "https://design.canva.ai/_ZpF6Wqe5MgS1Rk" },
+      { id: "DAELFfBlBBQ", title: "איתור ילדים ואובדנות - קורונה", pages: 18, thumb: "https://design.canva.ai/4Z5EK1fgKGMVU90" },
+      { id: "DAG3fWwF2JQ", title: "מאחורי החיוך - הכאב הנסתר", pages: 12, thumb: "https://design.canva.ai/fX_nh7vwaoelGP4" },
+      { id: "DAG3jC03Xis", title: "מאחורי החיוך - בחן את עצמי (טופס)", pages: 1, thumb: "https://design.canva.ai/GFmWU5Y3pHJnjPO" },
+      { id: "DAEOjBsjKs8", title: "מניעת אובדנות", pages: 26, thumb: "https://design.canva.ai/cAr0Oayfcdz0bac" },
+      { id: "DAEOgaXF_TY", title: "הזמנה למפגש יועצים - אובדנות", pages: 1, thumb: "https://design.canva.ai/qJ7VQbxbYmHSIqO" },
+      { id: "DAFNheBMjV0", title: "רצף טיפולי - טיוטא", pages: 2, thumb: "https://design.canva.ai/QkA3EHRNu5X3nFH" }
+    ]
+  },
+  {
+    id: "lifeskills", icon: "🎯", name: "כישורי חיים",
+    desc: "מדברים כישורי חיים, פנקסים למחנכת ושאלוני אקלים",
+    color: "#059669", color2: "#0891b2",
+    projects: [
+      { id: "DAG4SneKhYg", title: "מדברים כישורים לחיים - צוות ניהול", pages: 18, thumb: "https://design.canva.ai/4IgB3idUmCX4L3V" },
+      { id: "DAFU0pWa5Ac", title: "מדברים כישורי חיים - חנוכה", pages: 19, thumb: "https://design.canva.ai/oJI9cGQxtxLhE4M" },
+      { id: "DAEUVvS_P1o", title: "כישורי חיים - טו בשבט", pages: 6, thumb: "https://design.canva.ai/imEVUBPg5i2cz4k" },
+      { id: "DAG4Ur-8fRI", title: "מצגת אינטראקטיבית - כישורי חיים", pages: 24, thumb: "https://design.canva.ai/Z6rj_syoJugWaW5" },
+      { id: "DAG30ETYeFU", title: "לוגו כישורי חיים", pages: 2, thumb: "https://design.canva.ai/AzJnJedKaWFcSxL" },
+      { id: "DAGPy0B6ync", title: "פנקס למחנכת (מקיף)", pages: 108, thumb: "https://design.canva.ai/wRpRmtf5uIW4MXr" },
+      { id: "DAGc_qdpJOE", title: "שאלוני אקלים חינוכי מיטבי", pages: 1, thumb: "https://design.canva.ai/u_0Nztattrj_sdl" },
+      { id: "DAG5uWgLgrs", title: "מעגל הדאגה ומעגל ההשפעה (א)", pages: 10, thumb: "https://design.canva.ai/E_o6D-b2Kzzq1RC" },
+      { id: "DAG5urWcSjY", title: "מעגל הדאגה ומעגל ההשפעה (ב)", pages: 10, thumb: "https://design.canva.ai/ECB12UhpxAe9Ta0" },
+      { id: "DAG5uTvU5YY", title: "מעגל הדאגה ומעגל ההשפעה (ג)", pages: 10, thumb: "https://design.canva.ai/B8mVvonWF4AqMqB" },
+      { id: "DAFMqKBzrDU", title: "דף עיצוב התנהגות", pages: 3, thumb: "https://design.canva.ai/vc9DohEEOOSHj5B" },
+      { id: "DAENgz3Uer8", title: "מדברים גלויות - נושאים לדיון", pages: 4, thumb: "https://design.canva.ai/goK9TJThra-r8-_" },
+      { id: "DAENgbw-pKw", title: "נפגשים באויר הפתוח", pages: 15, thumb: "https://design.canva.ai/J7HCn6wBkLX0Vnx" }
+    ]
+  },
+  {
+    id: "protection", icon: "🛡️", name: "מוגנות ומניעת פגיעות",
+    desc: "שבוע מוגנות, מניעת פגיעות מיניות ופגיעות בילדים",
+    color: "#ea580c", color2: "#dc2626",
+    projects: [
+      { id: "DAHAEjFOPNw", title: "שבוע לקידום מוגנות ולמניעת פגיעות מיניות", pages: 1, thumb: "https://design.canva.ai/7oN4ZstzuZCzTXh" },
+      { id: "DAHAGDk9tak", title: "לוגו מוגנות מינית", pages: 1, thumb: "https://design.canva.ai/Yq12VIj45JwTzxE" },
+      { id: "DAG9z-UIjS4", title: "הכוחות שבדרך - מניעת פגיעות בילדים", pages: 1, thumb: "https://design.canva.ai/XCLn0H644HDkCe1" }
+    ]
+  },
+  {
+    id: "pesach", icon: "🍷", name: "חג הפסח",
+    desc: "ליל הסדר, יציאת מצרים, חבילות פסח ומהמיצר לחירות",
+    color: "#16a34a", color2: "#0891b2",
+    projects: [
+      { id: "DAEYWsx6LqY", title: "ליל הסדר הקהילתי בספיר", pages: 6, thumb: "https://design.canva.ai/sK2m0RFCJYpj7Q2" },
+      { id: "DAHFDcQ6TKY", title: "סידורי מקומות ליל הסדר", pages: 5, thumb: "https://design.canva.ai/3Tko4tiYmDQa4qR" },
+      { id: "DAHGc_nPT80", title: "יציאת מצרים פרטית", pages: 1, thumb: "https://design.canva.ai/lilsKrLoMyXeq1h" },
+      { id: "DAHGY2TD3Mc", title: "מהמיצר לחירות (סרטון)", pages: 1, thumb: "https://design.canva.ai/-YJ9KiHabNqW2py" },
+      { id: "DAE8w6Cg_mo", title: "אביב הגיע פסח בא - לצוות ולתלמידים", pages: 34, thumb: "https://design.canva.ai/RjcB6DfVboQ50ZV" },
+      { id: "DAHECyD8W8g", title: "חבילה עוברת לפסח / שאגת הארי", pages: 2, thumb: "https://design.canva.ai/H-NBLydHzeI21pI" },
+      { id: "DAHE8QDl2is", title: "גיבורי הסדר / מודעה", pages: 1, thumb: "https://design.canva.ai/PyXPPEc9xr2W_Y8" },
+      { id: "DAHFnXadTHs", title: "טקסט הפסקה", pages: 2, thumb: "https://design.canva.ai/bECbMn7H4x8m6xF" }
+    ]
+  },
+  {
+    id: "purim", icon: "🎭", name: "פורים",
+    desc: "אסתר גיבורה, כרטיסי שאלות, פעילות פורים ומגילת אסתר",
+    color: "#9333ea", color2: "#db2777",
+    projects: [
+      { id: "DAE5RzMcZBo", title: "פורים", pages: 13, thumb: "https://design.canva.ai/OicooP8NNTORYZC" },
+      { id: "DAE6O_afAMU", title: "פעילות פורים לצוות ולתלמידים", pages: 12, thumb: "https://design.canva.ai/z84F8fNhMyHJoTp" },
+      { id: "DAE6PbmbG_k", title: "פעילות שמחה אינטראקטיבית", pages: 23, thumb: "https://design.canva.ai/58B2DG5R4444HS3" },
+      { id: "DAG5sjnRbyY", title: "אסתר גיבורה! - אייר", pages: 2, thumb: "https://design.canva.ai/TXBpDK15u-iz48H" },
+      { id: "DAHBa7Tprq0", title: "כרטיסי שאלות פורים ומגילת אסתר", pages: 22, thumb: "https://design.canva.ai/ZS3jT0WoVi4Otwz" },
+      { id: "DAHC7VsBiO8", title: "אלבום תמונות פורימי", pages: 2, thumb: "https://design.canva.ai/7YthlrRAQXKNt6C" },
+      { id: "DAHBr0s2v1k", title: "כתר ומסיכה", pages: 1, thumb: "https://design.canva.ai/UF7yhwCRl1Fqhzq" },
+      { id: "DAHCyQdJ3bg", title: "מתגוננים וקוראים", pages: 1, thumb: "https://design.canva.ai/fp5hLwX3BAM6pG-" },
+      { id: "DAHCt949Nzw", title: "מצגת מפגש למידה מרחוק יב אדר", pages: 11, thumb: "https://design.canva.ai/y9CvJX9smn-FB1t" }
+    ]
+  },
+  {
+    id: "chanukah", icon: "🕎", name: "חנוכה",
+    desc: "אורות בייעוץ, להדליק את התקווה, מסיבת חנוכה ומעשים טובים",
+    color: "#0369a1", color2: "#7c3aed",
+    projects: [
+      { id: "DAG62HsJJNI", title: "אורות בייעוץ - מפגש יועצים שנה א'", pages: 1, thumb: "https://design.canva.ai/77z5JO1MJ5PuSyw" },
+      { id: "DAF0ijHY8f4", title: "להדליק את התקווה - ישיבת צוות", pages: 18, thumb: "https://design.canva.ai/bY9flgcIIfAv-a4" },
+      { id: "DAG6Q3W2k5M", title: "לחיים לחיים!", pages: 1, thumb: "https://design.canva.ai/tJP_su27PTQXXdT" },
+      { id: "DAG7a9RcYSA", title: "מסיבת חנוכה", pages: 1, thumb: "https://design.canva.ai/7YCJ589oOv8lfhQ" },
+      { id: "DAG69CYZen0", title: "קוביית שיח לחנוכה", pages: 2, thumb: "https://design.canva.ai/2snEpddC7nboikk" },
+      { id: "DAG7a376_cU", title: "מועדון המעשים הטובים", pages: 1, thumb: "https://design.canva.ai/xub-ATxdOhcqWgD" },
+      { id: "DAG7axFYJbc", title: "תעודות - המעשים הטובים", pages: 3, thumb: "https://design.canva.ai/-wuAzExbO3WbcW5" },
+      { id: "DAG7jjsqYGY", title: "חנוכה (סטורי)", pages: 1, thumb: "https://design.canva.ai/GhwHAB91ixR87nQ" },
+      { id: "DAG7ji6ydgk", title: "חג חנוכה שמח - אינסטגרם סטורי", pages: 1, thumb: "https://design.canva.ai/ZM2ZL8oVsE1JPJ2" },
+      { id: "DAEP70sgN0M", title: "חנוכה", pages: 1, thumb: "https://design.canva.ai/4pyU7MVoPtJvKuo" },
+      { id: "DAGttf9Dm-Q", title: "מועדון המעשים הטובים", pages: 1, thumb: "https://design.canva.ai/KIo0iR3-tl_WfrJ" }
+    ]
+  },
+  {
+    id: "holidays", icon: "📅", name: "מועדים ותאריכים נוספים",
+    desc: "יום הזכרון, טו בשבט, חודש הגאולה, ראש חודש והפרשת חלה",
+    color: "#1d4ed8", color2: "#059669",
+    projects: [
+      { id: "DAE_h2u95YU", title: "יום הזכרון", pages: 7, thumb: "https://design.canva.ai/7KAETSSkaIGumB8" },
+      { id: "DAHHS-oNmuM", title: "יום הזכרון (עותק א)", pages: 8, thumb: "https://design.canva.ai/U9-BOlvS0gRHsQf" },
+      { id: "DAHHS2lLCkw", title: "יום הזכרון (עותק ב)", pages: 7, thumb: "https://design.canva.ai/AJwos_tA-BGaWi2" },
+      { id: "DAF6h3yjFq0", title: "גיבורים וקדושים", pages: 6, thumb: "https://design.canva.ai/fWemk55gy7Oumeo" },
+      { id: "DAEUW22VgCw", title: "קחו עצה מעץ (טו בשבט)", pages: 22, thumb: "https://design.canva.ai/EdotYSxoe2GZZBd" },
+      { id: "DAG6MZe3Nh0", title: "חודש הגאולה", pages: 14, thumb: "https://design.canva.ai/CERnzhQArgpVO5l" },
+      { id: "DAGXg7-BcNs", title: "ראש חודש / שליחות - פרסומים", pages: 13, thumb: "https://design.canva.ai/g9lm9xGTjtlY-ba" },
+      { id: "DAHBavMB44s", title: "הַיּוֹם הַזֶּה הוּא הַתְחָלָה", pages: 1, thumb: "https://design.canva.ai/cTz9JPxGCCp5-F1" },
+      { id: "DAGg7mU7z-k", title: "יום המשפחה", pages: 3, thumb: "https://design.canva.ai/Zzl6hNyT2df5muo" },
+      { id: "DAFLPzAvkFI", title: "הפרשת חלה", pages: 1, thumb: "https://design.canva.ai/NHzWLTp6P3LgIQr" },
+      { id: "DAGROs3Usw8", title: "הפרשת חלה - חטיבת גבעתי תשפ\"ד", pages: 16, thumb: "https://design.canva.ai/FavrgsON6rrwP-X" },
+      { id: "DAG6jahSGLs", title: "הפרשת חלה - ראש חודש כסלו תשפ\"ו", pages: 18, thumb: "https://design.canva.ai/yotY6DDDM55pYTA" }
+    ]
+  },
+  {
+    id: "workshops", icon: "🎓", name: "השתלמויות, מליאות וסדנאות",
+    desc: "מפגשי גננות, יועצים, סופרוויזין ומפגשי צוות",
+    color: "#7c3aed", color2: "#4f46e5",
+    projects: [
+      { id: "DAEK5mVgkxI", title: "מפגש גננות - שיח עם הורים", pages: 28, thumb: "https://design.canva.ai/EGyutc1yMuUfrXn" },
+      { id: "DAFwqwnNT1k", title: "מפגש יועצי שנה א'", pages: 37, thumb: "https://design.canva.ai/sgu4r3Bln4KIV4K" },
+      { id: "DAHBnFN_ACk", title: "מצגת מלווה למליאת פקל", pages: 15, thumb: "https://design.canva.ai/PM5IL8AjB13VauL" },
+      { id: "DAFze_AUgYg", title: "סופרוויזין (מקיף)", pages: 65, thumb: "https://design.canva.ai/KNA9-ipkZk-Cwn5" },
+      { id: "DAFy2S2uFGg", title: "מפגשי סופרוויזין", pages: 1, thumb: "https://design.canva.ai/cyfdhNKJImvTtRd" },
+      { id: "DAFBCKho3m8", title: "מפגש סיום לצוות", pages: 22, thumb: "https://design.canva.ai/uYTE9hgg16wNs3Q" },
+      { id: "DAHEU7g1JOs", title: "איתכם בשגרה ובחרום - חני בלוי", pages: 2, thumb: "https://design.canva.ai/KC0AhW80xg-Ofyi" },
+      { id: "DAEzXRAhMKc", title: "והנה אנחנו שוב בזום", pages: 19, thumb: "https://design.canva.ai/QlYVVde_gk5VBCM" },
+      { id: "DAEVFln9dFM", title: "הזמנה למפגש", pages: 5, thumb: "https://design.canva.ai/qT5KhN2Mn6NHtYN" },
+      { id: "DAEMA7JzZUQ", title: "חוזרים לשגרה - מצגת פעילויות", pages: 12, thumb: "https://design.canva.ai/FyMS6aH8QkMwF0y" }
+    ]
+  },
+  {
+    id: "school", icon: "🎒", name: "חזרה ללימודים וסיכום שנה",
+    desc: "פתיחת שנה, סיכום שנה ושאגת הארי",
+    color: "#f59e0b", color2: "#ea580c",
+    projects: [
+      { id: "DAHGT87n2Wc", title: "חזרה ללימודים", pages: 2, thumb: "https://design.canva.ai/_AlNrSuKbGGuuYw" },
+      { id: "DAHEIxypPQY", title: "עוגן של תקווה - חזרה ללימודים", pages: 48, thumb: "https://design.canva.ai/DGHSe0Ib0z3-otz" },
+      { id: "DAGrWKrNYtg", title: "חבילה עוברת - סיכום שנה", pages: 28, thumb: "https://design.canva.ai/l8k19TO4GJI3_uO" },
+      { id: "DAHD8zd1syU", title: "שאגת הארי - תדריכים חשובים", pages: 1, thumb: "https://design.canva.ai/zSqnSpRXCOzBq9C" },
+      { id: "DAHEngI8lOA", title: "שאגת הארי - תדריכים (עותק)", pages: 1, thumb: "https://design.canva.ai/DrNLSHXQ2Ebz7Gb" }
+    ]
+  },
+  {
+    id: "spiritual", icon: "✨", name: "תוכן יהודי-רוחני",
+    desc: "תניא, תפילת הדרך, פסוקים ותכנים חסידיים",
+    color: "#0d9488", color2: "#0891b2",
+    projects: [
+      { id: "DAG93AZaI7E", title: "תניא (ספר מלא)", pages: 127, thumb: "https://design.canva.ai/PyMuj_a2IVk11Z9" },
+      { id: "DAG8bvFtvGo", title: "תניא (לוגו)", pages: 1, thumb: "https://design.canva.ai/JeRqvQWXi8cfM-2" },
+      { id: "DAG8PdEF8Yo", title: "תניא (פרסום)", pages: 3, thumb: "https://design.canva.ai/FWFJxRB78vJrhTq" },
+      { id: "DAFl0W56Doo", title: "תפילת הדרך - הדפסה דו-צדדית", pages: 7, thumb: "https://design.canva.ai/ec-uyH4_PbYSmg7" },
+      { id: "DAHGX0Sx6nw", title: "לַמְּדֵנִי אֱלֹהַי - פסוק", pages: 8, thumb: "https://design.canva.ai/mkC2NPYDSWmN5dz" },
+      { id: "DAHDo0_uxRM", title: "מסלול", pages: 1, thumb: "https://design.canva.ai/E8D5VeEjDAlVaxw" }
+    ]
+  },
+  {
+    id: "graphics", icon: "🎨", name: "פרסומים, לוגואים ומיתוג",
+    desc: "About Me, לוגואים, פרסומים לרשתות ועיצובים כלליים",
+    color: "#db2777", color2: "#9333ea",
+    projects: [
+      { id: "DAHHCtpxRHU", title: "About Me", pages: 1, thumb: "https://design.canva.ai/_mjLPNxn0G-s1Aj" },
+      { id: "DAGgVQfwqag", title: "מנדי בלוי", pages: 2, thumb: "https://design.canva.ai/uCbEJh_5ZSw4khA" },
+      { id: "DAG4a9-D_U4", title: "לוגו חני בלוי", pages: 5, thumb: "https://design.canva.ai/oKqTb5iz3Ok5fYY" },
+      { id: "DAG7jj7GJLE", title: "חג אביב שמח - אינסטגרם פוסט", pages: 1, thumb: "https://design.canva.ai/kfmwgcEIJVjkFhx" },
+      { id: "DAHBbBCNmVs", title: "משפטים לעיצוב", pages: 54, thumb: "https://design.canva.ai/X-hJSb9pU9BTjRn" },
+      { id: "DAHBbCigO-c", title: "משפטים למסגרות", pages: 11, thumb: "https://design.canva.ai/QODN_l8C1baWEo6" },
+      { id: "DAGsAK82SUU", title: "נספחים להדפסה", pages: 46, thumb: "https://design.canva.ai/h0wjMiRKbRVEe1s" },
+      { id: "DAG7a1mZ_eg", title: "מאירים", pages: 1, thumb: "https://design.canva.ai/RcScWRlmXcT-OjT" },
+      { id: "DAG7a4GOK4k", title: "פרסומים בקנבה", pages: 1, thumb: "https://design.canva.ai/Q_OKEVYZMjw_MDQ" },
+      { id: "DAFYHrANSac", title: "ברכות ואיחולים", pages: 18, thumb: "https://design.canva.ai/-oDd2emT6R2uMkt" },
+      { id: "DAHBDMFW3dE", title: "נתוני קוד Canva - גרסה 3", pages: 1, thumb: "https://design.canva.ai/WsiV-A3oKlal4VG" },
+      { id: "DAHBC6y0UpY", title: "נתוני קוד Canva - גרסה 1", pages: 1, thumb: "https://design.canva.ai/uslvoHnKZeAK02_" }
+    ]
+  },
+  {
+    id: "personal", icon: "👨‍👩‍👧", name: "אישי, משפחתי ומסמכים",
+    desc: "הזמנות, חיילות, הדרכת כלה, גירושין ומסמכים פרטיים",
+    color: "#64748b", color2: "#1e293b",
+    projects: [
+      { id: "DAHAu7-1A2E", title: "גירושין ופרידה (א)", pages: 24, thumb: "https://design.canva.ai/d7II13HfFymo_3G" },
+      { id: "DAHAu4K_Hw0", title: "גירושין ופרידה (ב)", pages: 31, thumb: "https://design.canva.ai/rOCdX7ytGVv3dml" },
+      { id: "DAG4UksH0hc", title: "הדרכת כלה", pages: 2, thumb: "https://design.canva.ai/NlhQ4QOD3j8W2sB" },
+      { id: "DAG4Unew_Vc", title: "אישור הדרכת כלה", pages: 1, thumb: "https://design.canva.ai/wI7qOcsUX0o8dC4" },
+      { id: "DAE3tnQuHLI", title: "מערכת שעות חני", pages: 1, thumb: "https://design.canva.ai/tKUMBMswQNlG9i8" },
+      { id: "DAE_2zE1UHM", title: "הזמנה ליום הולדת - דבורי בת 6", pages: 2, thumb: "https://design.canva.ai/37L1aSFPqHFuZTA" },
+      { id: "DAG-VU95sMY", title: "וופל בת מצווה אבישג", pages: 1, thumb: "https://design.canva.ai/ekHLLPRlA1xmq69" },
+      { id: "DAGFvoM7NTs", title: "תמונות אביה", pages: 7, thumb: "https://design.canva.ai/yJxD_VWcADmMON_" },
+      { id: "DAG0dtwvAr4", title: "חיילות", pages: 7, thumb: "https://design.canva.ai/HjZr0SkHGobZYOH" },
+      { id: "DAG-ynsEkKY", title: "היומן שלי", pages: 1, thumb: "https://design.canva.ai/wCfUdLDwYZgGDiM" },
+      { id: "DAF9If5y5sc", title: "שמלות ערב להשכרה", pages: 22, thumb: "https://design.canva.ai/fwh1vpbUhoxh1AP" },
+      { id: "DAHG6k7wc7w", title: "חוזה שכירות", pages: 10, thumb: "https://design.canva.ai/F4WnqKaua0GtDQD" },
+      { id: "DAGTpoAkiH0", title: "סידורי מקום", pages: 4, thumb: "https://design.canva.ai/pzYlmC1h4euw61t" }
+    ]
+  }
+];
+
+// ============ RENDER ============
+const container = document.getElementById('categoriesContainer');
+const catNav = document.getElementById('catNav');
+let totalCount = 0;
+data.forEach(cat => totalCount += cat.projects.length);
+document.getElementById('totalCount').textContent = totalCount;
+
+// Category chips
+const allChip = document.createElement('button');
+allChip.className = 'cat-chip active';
+allChip.dataset.cat = 'all';
+allChip.innerHTML = `🌐 הכל <span class="count">${totalCount}</span>`;
+catNav.appendChild(allChip);
+
+data.forEach(cat => {
+  const chip = document.createElement('button');
+  chip.className = 'cat-chip';
+  chip.dataset.cat = cat.id;
+  chip.innerHTML = `${cat.icon} ${cat.name} <span class="count">${cat.projects.length}</span>`;
+  catNav.appendChild(chip);
+});
+
+// Category sections
+data.forEach(cat => {
+  const section = document.createElement('section');
+  section.className = 'category-section';
+  section.dataset.cat = cat.id;
+  section.style.setProperty('--accent', cat.color);
+  section.style.setProperty('--accent2', cat.color2);
+
+  const header = document.createElement('div');
+  header.className = 'category-header';
+  header.innerHTML = `
+    <div class="icon">${cat.icon}</div>
+    <div>
+      <h2>${cat.name}</h2>
+      <div class="desc">${cat.desc} · ${cat.projects.length} פרויקטים</div>
+    </div>
+  `;
+  section.appendChild(header);
+
+  const grid = document.createElement('div');
+  grid.className = 'projects-grid';
+  cat.projects.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    card.style.setProperty('--accent', cat.color);
+    card.style.setProperty('--accent2', cat.color2);
+    card.dataset.title = p.title;
+
+    const initial = p.title.replace(/[^\u0590-\u05FFa-zA-Z]/g, '').charAt(0) || '🎨';
+
+    card.innerHTML = `
+      <div class="thumb-wrapper">
+        <img src="${p.thumb}" alt="${p.title}" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add('no-img')" />
+        <div class="fallback">${cat.icon}<br>${initial}</div>
+      </div>
+      <div class="project-body">
+        <div class="project-title">${p.title}</div>
+        <div class="project-meta">
+          <span>📄 ${p.pages} ${p.pages === 1 ? 'עמוד' : 'עמודים'}</span>
+        </div>
+        <div class="project-actions">
+          <a class="btn btn-edit" href="https://www.canva.com/design/${p.id}/edit" target="_blank">✏️ עריכה</a>
+          <a class="btn btn-view" href="https://www.canva.com/design/${p.id}/view" target="_blank">👁️ צפייה</a>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  section.appendChild(grid);
+  container.appendChild(section);
+});
+
+// ============ FILTERING ============
+const searchInput = document.getElementById('searchInput');
+
+function applyFilters() {
+  const query = searchInput.value.trim().toLowerCase();
+  const activeCat = document.querySelector('.cat-chip.active').dataset.cat;
+
+  document.querySelectorAll('.category-section').forEach(section => {
+    const catMatch = activeCat === 'all' || section.dataset.cat === activeCat;
+    let visibleCount = 0;
+
+    section.querySelectorAll('.project-card').forEach(card => {
+      const titleMatch = card.dataset.title.toLowerCase().includes(query);
+      const show = catMatch && titleMatch;
+      card.style.display = show ? '' : 'none';
+      if (show) visibleCount++;
+    });
+
+    section.classList.toggle('hidden', !catMatch || visibleCount === 0);
+  });
+}
+
+searchInput.addEventListener('input', applyFilters);
+
+catNav.addEventListener('click', e => {
+  const chip = e.target.closest('.cat-chip');
+  if (!chip) return;
+  document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  applyFilters();
+  window.scrollTo({ top: 300, behavior: 'smooth' });
+});
+
+// View toggle
+document.querySelectorAll('.view-toggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.body.classList.toggle('projects-list', btn.dataset.view === 'list');
+  });
+});
+</script>
+
+</body>
+</html>
